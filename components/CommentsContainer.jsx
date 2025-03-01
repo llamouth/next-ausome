@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import { fetcher } from "@/lib/api";
+import { fetcher } from "../app/lib/api";
 import { Button } from "@/components/ui/button";
 import toast from "react-hot-toast";
 

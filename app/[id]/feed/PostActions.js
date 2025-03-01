@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
-import { Button } from "react-bootstrap";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { FaThumbsUp, FaCommentDots } from "react-icons/fa";
 import { fetcher } from "@/app/lib/api";
 

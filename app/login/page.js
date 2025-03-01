@@ -4,34 +4,52 @@ import { useRouter } from "next/navigation";
 import { fetcher } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
 import { Button } from "@/components/ui/button";
+import { Formik, Form, Field, ErrorMessage } from "formik";
+import * as Yup from "yup";
 import toast from "react-hot-toast";
 import LoadingSpinner from "@/components/LoadingSpinner";
+import { FaEye, FaEyeSlash } from "react-icons/fa";
 
 export default function LoginPage() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const { login } = useAuth();
   const router = useRouter();
-  const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
-  const handleLogin = async (e) => {
-    e.preventDefault();
-    setLoading(true);
+  // Form Validation Schema
+  const validationSchema = Yup.object({
+    username: Yup.string().required("Username is required"),
+    password: Yup.string().required("Password is required"),
+  });
 
+  const handleLogin = async (values, { setSubmitting }) => {
     try {
+      // Backend expects "password_hash", so we rename it
+      const formattedUser = {
+        username: values.username,
+        password_hash: values.password, // Rename password field
+      };
+      console.log("fetch happening ", formattedUser);
+
       const res = await fetcher("/users/login", {
         method: "POST",
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify(formattedUser),
       });
+
+      console.log("fetch done ");
+
+      if (!res || res === false) {
+        toast.error("Invalid username or password. Please try again.");
+        return;
+      }
 
       login(res.user, res.token);
       toast.success("Login successful! Redirecting...");
-      router.push(`/${res.user.id}/feed`); // Redirect to user feed
+      router.push(`/${res.user.id}/feed`);
     } catch (error) {
-      toast.error("Invalid email or password. Please try again.");
-      console.error("Login failed:", error);
+      toast.error("Login failed. Please try again.");
+      console.error("Login error:", error);
     } finally {
-      setLoading(false);
+      setSubmitting(false);
     }
   };
 
@@ -42,32 +60,51 @@ export default function LoginPage() {
           Login to Ausome
         </h1>
 
-        <form onSubmit={handleLogin} className="space-y-4 mt-6">
-          <input
-            type="email"
-            placeholder="Email"
-            className="w-full p-2 border rounded-md"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
-          <input
-            type="password"
-            placeholder="Password"
-            className="w-full p-2 border rounded-md"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
+        <Formik
+          initialValues={{ username: "", password: "" }}
+          validationSchema={validationSchema}
+          onSubmit={handleLogin}
+        >
+          {({ isSubmitting }) => (
+            <Form className="space-y-4 mt-6">
+              <div>
+                <Field
+                  type="text"
+                  name="username"
+                  placeholder="Username"
+                  className="w-full p-2 border rounded-md"
+                />
+                <ErrorMessage name="username" component="p" className="text-red-500 text-sm" />
+              </div>
 
-          <Button
-            type="submit"
-            className="w-full bg-blue-600 text-white py-2 rounded-md flex justify-center items-center"
-            disabled={loading}
-          >
-            {loading ? <LoadingSpinner /> : "Login"}
-          </Button>
-        </form>
+              {/* Password Input with Show/Hide Icon */}
+              <div className="relative">
+                <Field
+                  type={showPassword ? "text" : "password"}
+                  name="password"
+                  placeholder="Password"
+                  className="w-full p-2 border rounded-md pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-3 text-gray-500 hover:text-gray-700 transition-all"
+                >
+                  {showPassword ? <FaEyeSlash size={20} /> : <FaEye size={20} />}
+                </button>
+                <ErrorMessage name="password" component="p" className="text-red-500 text-sm" />
+              </div>
+
+              <Button
+                type="submit"
+                className="w-full bg-blue-600 text-white py-2 rounded-md flex justify-center items-center"
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? <LoadingSpinner /> : "Login"}
+              </Button>
+            </Form>
+          )}
+        </Formik>
 
         <p className="text-center text-gray-600 dark:text-gray-400 mt-4">
           Don't have an account?{" "}

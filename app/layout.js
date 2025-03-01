@@ -1,5 +1,6 @@
 import { Geist, Geist_Mono, Comic_Neue } from "next/font/google";
 import { AuthProvider } from "./context/AuthContext";
+import Navbar from "../components/Navbar";
 import "./globals.css";
 import { Toaster } from "react-hot-toast";
 
@@ -26,15 +27,16 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <AuthProvider>
-      <html lang="en">
+    <html lang="en">
         <body
           className={`${comicNeue.variable} ${comicNeue.variable} antialiased`}
-        >
-          <Toaster position="top-right" reverseOrder={false} /> 
-          {children}
+          >
+          <AuthProvider>
+            <Toaster position="top-right" reverseOrder={false} /> 
+            <Navbar />
+            <div className="min-h-screen">{children}</div>
+          </AuthProvider>
         </body>
       </html>
-    </AuthProvider>
   );
 }

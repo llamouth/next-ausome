@@ -1,6 +1,6 @@
-import { Button } from "react-bootstrap";
+import { Button } from "@/components/ui/button";
 import { FaTimes } from "react-icons/fa";
-import ProfilePic from "../../../assets/default-profile.jpg";
+import ProfilePic from '../../../public/default-profile.jpg';
 import { useRouter } from "next/navigation";
 
 export default function PostHeader({ user, postUserId, currentUserId, setDeletePost }) {

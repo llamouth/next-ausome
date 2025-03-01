@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import { Card } from "react-bootstrap";
+import { Card } from "@/components/ui/card";
 import { fetcher } from "@/app/lib/api";
 import { useParams, useRouter } from "next/navigation";
 import PostHeader from "./PostHeader";
@@ -9,10 +9,8 @@ import CommentsContainer from "@/components/CommentsContainer";
 import DeletePost from "./DeletePost";
 
 export default function Post({ post, setAllPosts }) {
-  const { id } = useParams(); // Current logged-in user ID
-  const router = useRouter();
-  const token =
-    typeof window !== "undefined" ? localStorage.getItem("token") : null;
+  const { id } = useParams();
+  const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
 
   const [user, setUser] = useState({});
   const [likes, setLikes] = useState([]);
@@ -28,12 +26,7 @@ export default function Post({ post, setAllPosts }) {
         setUser(userData);
 
         // Fetch likes
-        const likesData = await fetcher(
-          `/users/${post.user_id}/posts/${post.id}/likes`,
-          {
-            headers: { Authorization: token },
-          }
-        );
+        const likesData = await fetcher(`/users/${post.user_id}/posts/${post.id}/likes`);
         setLikes(likesData);
       } catch (error) {
         console.error("Error fetching data:", error);

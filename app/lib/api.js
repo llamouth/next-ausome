@@ -1,11 +1,16 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 export const fetcher = async (url, options = {}) => {
-  const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+  let token = null;
+  
+  // Ensure token is fetched only on the client
+  if (typeof window !== "undefined") {
+    token = localStorage.getItem("token");
+  }
 
   const headers = {
     "Content-Type": "application/json",
-    ...(token && { Authorization: `Bearer ${token}` }),
+    ...(token && { Authorization: `${token}` }),
     ...(options.headers || {}),
   };
 

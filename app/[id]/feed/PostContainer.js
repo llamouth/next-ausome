@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import Post from "@/components/Post";
+import Post from "./Post";
 import { fetcher } from "@/app/lib/api";
 
 export default function PostContainer({ userId }) {

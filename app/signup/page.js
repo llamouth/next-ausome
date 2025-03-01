@@ -1,50 +1,53 @@
 "use client";
-import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { fetcher } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
 import { Button } from "@/components/ui/button";
+import { Formik, Form, Field, ErrorMessage } from "formik";
+import * as Yup from "yup";
 import toast from "react-hot-toast";
 import LoadingSpinner from "@/components/LoadingSpinner";
 
 export default function SignUpPage() {
   const { login } = useAuth();
   const router = useRouter();
-  
-  const [formData, setFormData] = useState({
-    first_name: "",
-    last_name: "",
-    username: "",
-    email: "",
-    password: "",
+
+  // Form Validation Schema
+  const validationSchema = Yup.object({
+    first_name: Yup.string().required("First Name is required"),
+    last_name: Yup.string().required("Last Name is required"),
+    username: Yup.string().min(3, "Must be at least 3 characters").required("Username is required"),
+    email: Yup.string().email("Invalid email address").required("Email is required"),
+    password: Yup.string().min(6, "Password must be at least 6 characters").required("Password is required"),
   });
 
-  const [loading, setLoading] = useState(false);
-
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-
+  const handleSignUp = async (values, { setSubmitting }) => {
     try {
+      const formattedUser = {
+        ...values,
+        password_hash: values.password, 
+        profile_picture: values.profile_picture || "", 
+        bio: values.bio || "", 
+      };
+  
+      delete formattedUser.password; 
+  
       const res = await fetcher("/users", {
         method: "POST",
-        body: JSON.stringify(formData),
+        body: JSON.stringify(formattedUser),
       });
-
+  
       login(res.user, res.token);
       toast.success("Account created successfully! Redirecting...");
-      router.push(`/${res.user.id}/feed`); // Redirect to feed after signup
+      router.push(`/${res.user.id}/feed`);
     } catch (error) {
       toast.error("Sign-up failed. Please try again.");
       console.error("Sign-up error:", error);
     } finally {
-      setLoading(false);
+      setSubmitting(false);
     }
   };
+  
 
   return (
     <main className="flex flex-col items-center justify-center min-h-screen p-6">
@@ -53,21 +56,50 @@ export default function SignUpPage() {
           Create an Account
         </h2>
 
-        <form onSubmit={handleSubmit} className="space-y-4 mt-4">
-          <input type="text" name="first_name" placeholder="First Name" value={formData.first_name} onChange={handleChange} className="w-full p-2 border rounded-md" required />
-          <input type="text" name="last_name" placeholder="Last Name" value={formData.last_name} onChange={handleChange} className="w-full p-2 border rounded-md" required />
-          <input type="text" name="username" placeholder="Username" value={formData.username} onChange={handleChange} className="w-full p-2 border rounded-md" required />
-          <input type="email" name="email" placeholder="Email" value={formData.email} onChange={handleChange} className="w-full p-2 border rounded-md" required />
-          <input type="password" name="password" placeholder="Password" value={formData.password} onChange={handleChange} className="w-full p-2 border rounded-md" required />
-          
-          <Button
-            type="submit"
-            className="w-full bg-blue-600 text-white py-2 rounded-md flex justify-center items-center"
-            disabled={loading}
-          >
-            {loading ? <LoadingSpinner /> : "Sign Up"}
-          </Button>
-        </form>
+        <Formik
+          initialValues={{
+            first_name: "",
+            last_name: "",
+            username: "",
+            email: "",
+            password: "",
+          }}
+          validationSchema={validationSchema}
+          onSubmit={handleSignUp}
+        >
+          {({ isSubmitting }) => (
+            <Form className="space-y-4 mt-4">
+              <div>
+                <Field type="text" name="first_name" placeholder="First Name" className="w-full p-2 border rounded-md" />
+                <ErrorMessage name="first_name" component="p" className="text-red-500 text-sm" />
+              </div>
+
+              <div>
+                <Field type="text" name="last_name" placeholder="Last Name" className="w-full p-2 border rounded-md" />
+                <ErrorMessage name="last_name" component="p" className="text-red-500 text-sm" />
+              </div>
+
+              <div>
+                <Field type="text" name="username" placeholder="Username" className="w-full p-2 border rounded-md" />
+                <ErrorMessage name="username" component="p" className="text-red-500 text-sm" />
+              </div>
+
+              <div>
+                <Field type="email" name="email" placeholder="Email" className="w-full p-2 border rounded-md" />
+                <ErrorMessage name="email" component="p" className="text-red-500 text-sm" />
+              </div>
+
+              <div>
+                <Field type="password" name="password" placeholder="Password" className="w-full p-2 border rounded-md" />
+                <ErrorMessage name="password" component="p" className="text-red-500 text-sm" />
+              </div>
+
+              <Button type="submit" className="w-full bg-blue-600 text-white py-2 rounded-md flex justify-center items-center" disabled={isSubmitting}>
+                {isSubmitting ? <LoadingSpinner /> : "Sign Up"}
+              </Button>
+            </Form>
+          )}
+        </Formik>
 
         <p className="text-center text-gray-600 dark:text-gray-400 mt-4">
           Already have an account?{" "}
