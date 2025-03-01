@@ -1,43 +1,64 @@
 "use client";
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useState, useEffect, useContext } from "react";
+import { fetcher } from "@/lib/api";
 import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
 
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
+  const [token, setToken] = useState(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    const userData = localStorage.getItem("user");
+    const storedToken = localStorage.getItem("token");
 
-    if (token && userData) {
-      setUser(JSON.parse(userData));
+    if (storedToken) {
+      setToken(storedToken);
+      fetchUserData(storedToken);
     } else {
-      setUser(null);
+      setLoading(false);
     }
-
-    setLoading(false);
   }, []);
 
-  const login = (userData, token) => {
-    localStorage.setItem("token", token);
-    localStorage.setItem("user", JSON.stringify(userData));
-    setUser(userData);
-    router.push(`/${userData.id}/feed`);
+  // Fetch user data using the stored token
+  const fetchUserData = async (storedToken) => {
+    try {
+        const res = await fetcher("/users/me", {
+            headers: { Authorization: storedToken }, 
+        });
+
+        setUser(res); // ✅ Store user data in state
+    } catch (error) {
+        console.error("Failed to fetch user data:", error);
+        logout();
+    } finally {
+        setLoading(false);
+    }
   };
 
+  // Login function
+  const login = (userToken) => {
+    localStorage.setItem("token", userToken);
+    setToken(userToken);
+    fetchUserData(userToken); // Fetch user data dynamically
+    toast.success("Login successful!");
+    router.push(`/feed`);
+  };
+
+  // Logout function
   const logout = () => {
     localStorage.removeItem("token");
-    localStorage.removeItem("user");
     setUser(null);
+    setToken(null);
+    toast.success("Logged out successfully!");
     router.push("/login");
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, loading }}>
+    <AuthContext.Provider value={{ user, token, login, logout, loading }}>
       {children}
     </AuthContext.Provider>
   );

@@ -1,8 +1,11 @@
 import { Geist, Geist_Mono, Comic_Neue } from "next/font/google";
-import { AuthProvider } from "./context/AuthContext";
-import Navbar from "../components/Navbar";
 import "./globals.css";
 import { Toaster } from "react-hot-toast";
+import Navbar from "../components/Navbar";
+import { AuthProvider } from "./context/AuthContext";
+import { FriendsProvider } from "./context/FriendsContext";
+import { PostsProvider } from "./context/PostsContext";
+import { UserProvider } from "./context/UserContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",

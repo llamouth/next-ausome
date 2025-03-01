@@ -42,7 +42,7 @@ export default function LoginPage() {
         return;
       }
 
-      login(res.user, res.token);
+      login(res.token);
       toast.success("Login successful! Redirecting...");
       router.push(`/${res.user.id}/feed`);
     } catch (error) {
